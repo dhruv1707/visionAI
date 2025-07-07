@@ -1,0 +1,4 @@
+moviepy
+audio_extract
+whisperx
+opencv-python
