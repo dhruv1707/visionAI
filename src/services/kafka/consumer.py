@@ -1,9 +1,9 @@
 from kafka import KafkaConsumer
 
 class Consumer():
-    def __init__(self, topic):
+    def __init__(self, topic, bootstrap_servers):
         self.consumer = KafkaConsumer(topic, 
-                                      bootstrap_servers=['192.168.2.96:9092'],
+                                      bootstrap_servers=bootstrap_servers,
                                       auto_offset_reset='earliest')
 
     def consume(self):

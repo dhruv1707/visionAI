@@ -59,7 +59,7 @@ from model_llama import ModelLlama
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-class ModelBlip(nn.Module):
+class ModelPaliGemma(nn.Module):
     def __init__(self, model_1, processor_1):
         super().__init__()
         self.model_1 = model_1
@@ -123,5 +123,5 @@ if __name__=="__main__":
 
   path_to_data = "src/output"
 
-  model = ModelBlip(model_1, processor_1)
+  model = ModelPaliGemma(model_1, processor_1)
   model(path_to_data)
