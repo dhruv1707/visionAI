@@ -1,0 +1,57 @@
+Parameters:
+  App:
+    Type: String
+    Description: Your application's name.
+  Env:
+    Type: String
+    Description: The environment name your service, job, or workflow is being deployed to.
+  Name:
+    Type: String
+    Description: Your workload's name.
+
+Resources:
+  ChunkerRolePolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: MSKActions
+            Effect: Allow
+            Action:
+              - kafka-cluster:Connect
+              - kafka-cluster:DescribeCluster
+              - kafka-cluster:DescribeTopic
+              - kafka-cluster:ReadData
+              - kafka-cluster:DescribeGroup
+              - kafka-cluster:AlterGroup
+              - kafka-cluster:CreateTopic
+              - kafka-cluster:AlterTopic
+            Resource:
+              - arn:aws:kafka:ca-central-1:730335337132:cluster/visionAI-kafka/1c2bf101-d66c-47dc-a9e1-a1da37501b13-s1
+              - arn:aws:kafka:ca-central-1:730335337132:topic/visionAI-kafka/1c2bf101-d66c-47dc-a9e1-a1da37501b13-s1/video_uploads
+              - arn:aws:kafka:ca-central-1:730335337132:topic/visionAI-kafka/1c2bf101-d66c-47dc-a9e1-a1da37501b13-s1/chunked_vids
+              - arn:aws:kafka:ca-central-1:730335337132:group/visionAI-kafka/1c2bf101-d66c-47dc-a9e1-a1da37501b13-s1/video_processors
+          - Sid: ExecActions
+            Effect: Allow
+            Action:
+              - ssmmessages:CreateControlChannel
+              - ssmmessages:CreateDataChannel
+              - ssmmessages:OpenControlChannel
+              - ssmmessages:OpenDataChannel
+              - ecs:ExecuteCommand
+            Resource:
+              - "*"
+          - Sid: S3Actions
+            Effect: Allow
+            Action:
+              - s3:GetObject
+              - s3:PutObject
+            Resource:
+              - arn:aws:s3:::raw-videos-02/*
+              - arn:aws:s3:::processed-videos-visionai/*
+
+Outputs:
+  DebugRolePolicyARN:
+    Description: The ARN of the custom managed policy
+    Value: !Ref ChunkerRolePolicy

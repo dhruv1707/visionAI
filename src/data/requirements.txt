@@ -1,0 +1,8 @@
+moviepy
+audio_extract
+whisperx==3.3.2
+opencv-python
+boto3
+kafka-python
+aws-msk-iam-sasl-signer-python
+matplotlib
