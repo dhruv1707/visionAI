@@ -208,12 +208,3 @@ class Data():
                 print("Output dir: ", output_dir)
                 extract_frames_and_audio(video_path=filepath, output_dir=save_dir, n_seconds=6, chunk_duration=30, bucket=output_dir)
                 
-                
-
-if __name__=="__main__":
-    path_to_vid = "/Users/dhruvmehrottra007/Desktop/Beerbiceps - Assignments/LA9"
-    output_dir = "/Users/dhruvmehrottra007/Desktop/VisionAI/src/output"
-    output_dir_chunk = "src/chunks"
-    data = Data(path_to_vid)
-    # data.chunk_video(path_to_vid, output_dir=output_dir_chunk)
-    data.process_video(path_to_vid, output_dir=output_dir)
