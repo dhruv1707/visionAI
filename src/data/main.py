@@ -1,21 +1,80 @@
 import os
 import boto3
 from data import Data
-from services import kafka
+from services.kafka import consumer, producer
+from botocore.exceptions import ClientError
+import json
+import logging
+from kafka import TopicPartition, OffsetAndMetadata
+from kafka.errors import CommitFailedError
+import shutil
 
-BOOTSTRAP_SERVERS = os.getenv("BOOTSTRAP_SERVER")
+BOOTSTRAP_SERVERS = os.getenv("BOOTSTRAP_SERVERS")
 TOPIC_IN = os.getenv("TOPIC_IN")
-INPUT_DIR = os.getenv("S3_INPUT_BUCKET")
+TOPIC_OUT = os.getenv("TOPIC_OUT")
+INPUT_DIR = os.getenv("S3_INPUT_DIR")
 OUTPUT_DIR = os.getenv("S3_OUTPUT_DIR")
 GROUP_ID = os.getenv("GROUP_ID")
 
-consumer = kafka.consumer(TOPIC_IN, BOOTSTRAP_SERVERS)
-s3 = boto3.client('s3')
+print(f"TOPIC_IN:{TOPIC_IN}")
+print(f"BOOTSTRAP_SERVER: {BOOTSTRAP_SERVERS}")
+print(f"TOPIC_OUT:{TOPIC_OUT}")
 
-for msg in consumer:
-    payload = msg.value
-    key = payload["key"]
-    local_tmp = f"/tmp"
-    s3.download_file(INPUT_DIR, key, local_tmp)
-    data = Data(local_tmp)
-    data.process_video(local_tmp, OUTPUT_DIR)
+kafka_consumer = consumer.Consumer(TOPIC_IN, BOOTSTRAP_SERVERS, GROUP_ID)
+kafka_producer = producer.Producer(BOOTSTRAP_SERVERS, TOPIC_OUT)
+print(f"Kafka Consumer initialized: {kafka_consumer}")
+s3 = boto3.client('s3', region_name="ca-central-1")
+print(f"S3: {s3}")
+
+def commit_exact(msg):
+    tp = TopicPartition(msg.topic, msg.partition)
+    off = OffsetAndMetadata(msg.offset + 1, None, leader_epoch=-1)
+    try:
+        kafka_consumer.consumer.commit({tp: off})   # commit *exactly* the msg you finished
+    except CommitFailedError:
+        # we were likely revoked; just continue—next poll() will rejoin
+        pass
+
+print("Entering consume loop…")
+while True:
+    polled = kafka_consumer.consumer.poll(timeout_ms=200)
+    for partition, msgs in polled.items():
+        for msg in msgs:
+            # pause this partition so we don’t read ahead
+            tp = TopicPartition(msg.topic, msg.partition)
+            print("Partition: ", partition)
+            kafka_consumer.consumer.pause(tp)
+            try:
+                payload = msg.value
+                key = json.loads(payload)["key"]
+                local_tmp = f"/tmp/{key}"
+                os.makedirs(os.path.dirname(local_tmp), exist_ok=True)
+
+                try:
+                    s3.download_file(INPUT_DIR, key, local_tmp)
+                except ClientError as e:
+                    if e.response.get("Error", {}).get("Code") in ("NoSuchKey", "404"):
+                        logging.warning("Missing S3 key %s; skipping and committing", key)
+                        commit_exact(msg)
+                        continue
+                    raise
+
+                data = Data(local_tmp)
+                data.process_video(f"/tmp", OUTPUT_DIR, key, s3)  # heavy work
+
+                # commit *before* producing (so a stuck produce doesn’t risk a revoke)
+                commit_exact(msg)
+
+                # produce result (idempotent on sink, or switch to confluent-kafka idempotent producer)
+                kafka_producer.producer.send(TOPIC_OUT, json.dumps({"video_name": key}).encode("utf-8"))
+                print(f"Message sent to {TOPIC_OUT}")
+                kafka_producer.producer.flush()
+            finally:
+                kafka_consumer.consumer.resume(tp)
+            try:
+                shutil.rmtree(f"/tmp")
+                print("Removed directory /tmp")
+                shutil.rmtree(f"/app")
+                print("Removed directory /app")
+            except OSError:
+                pass

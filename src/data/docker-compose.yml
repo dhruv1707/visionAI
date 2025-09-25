@@ -6,8 +6,8 @@ services:
     environment:
       - BOOTSTRAP_SERVERS=$(BOOTSTRAP_SERVERS)
       - TOPIC_IN=video_uploads
-      - INPUT_DIR=raw-videos
-      - OUTPUT_DIR=processed-videos
+      - S3_INPUT_DIR=raw-videos
+      - S3_OUTPUT_DIR=processed-videos
       - GROUP_ID=video_processors
     volumes:
       - .:/var/lib/data

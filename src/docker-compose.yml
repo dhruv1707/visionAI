@@ -1,0 +1,54 @@
+version: '3.8'
+services:
+  kafka:
+    image: apache/kafka:latest
+    container_name: kafka_visionAI
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://192.168.2.96:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+    healthcheck:
+      test: ["CMD", "/opt/kafka/bin/kafka-topics.sh", "--bootstrap-server", "192.168.2.96:9092", "--list"]
+      interval: 10s
+      retries: 10
+
+  kafka-init:
+    image: apache/kafka:latest
+    depends_on:
+      kafka:
+        condition: service_healthy
+    volumes:
+      - ./create_topics.sh:/create_topics.sh
+    entrypoint: >
+      bash -e -c '
+        echo "⌛ waiting for Kafka…";
+        until /opt/kafka/bin/kafka-topics.sh --bootstrap-server 192.168.2.96:9092 --list >/dev/null 2>&1; do sleep 2; done;
+        echo "✅ creating topics…";
+        chmod +x /create_topics.sh;
+        /create_topics.sh --bootstrap-server 192.168.2.96:9092;
+      '
+  chunker:
+    build:
+      context: .
+      dockerfile: data/Dockerfile
+    deploy:
+      replicas: 4
+    environment:
+      - BOOTSTRAP_SERVERS=192.168.2.96:9092
+      - TOPIC_IN=video_uploads
+      - S3_INPUT_DIR=raw-videos
+      - S3_OUTPUT_DIR=processed-videos
+      - GROUP_ID=video_processors
+    # volumes:
+    #   - .:/var/lib/data
+    

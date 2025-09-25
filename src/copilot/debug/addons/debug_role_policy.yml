@@ -1,0 +1,46 @@
+Parameters:
+  App:
+    Type: String
+    Description: Your application's name.
+  Env:
+    Type: String
+    Description: The environment name your service, job, or workflow is being deployed to.
+  Name:
+    Type: String
+    Description: Your workload's name.
+
+Resources:
+  DebugRolePolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: MSKActions
+            Effect: Allow
+            Action:
+              - kafka-cluster:Connect
+              - kafka-cluster:DescribeCluster
+              - kafka-cluster:DescribeTopic
+              - kafka-cluster:ReadData
+              - kafka-cluster:DescribeGroup
+              - kafka-cluster:AlterGroup
+            Resource:
+              - arn:aws:kafka:ca-central-1:730335337132:cluster/visionai-kafka/a0da412d-2485-482f-a653-687e43ff5db0-s1
+              - arn:aws:kafka:ca-central-1:730335337132:topic/visionai-kafka/a0da412d-2485-482f-a653-687e43ff5db0-s1/video_uploads
+              - arn:aws:kafka:ca-central-1:730335337132:group/visionai-kafka/a0da412d-2485-482f-a653-687e43ff5db0-s1/video_processors
+          - Sid: ExecActions
+            Effect: Allow
+            Action:
+              - ssmmessages:CreateControlChannel
+              - ssmmessages:CreateDataChannel
+              - ssmmessages:OpenControlChannel
+              - ssmmessages:OpenDataChannel
+              - ecs:ExecuteCommand
+            Resource:
+              - "*"
+
+Outputs:
+  DebugRolePolicyARN:
+    Description: The ARN of the custom managed policy
+    Value: !Ref DebugRolePolicy
