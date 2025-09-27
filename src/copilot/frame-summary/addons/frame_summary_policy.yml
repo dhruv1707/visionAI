@@ -30,10 +30,10 @@ Resources:
               - kafka-cluster:CreateTopic
               - kafka-cluster:AlterTopic
             Resource:
-              - arn:aws:kafka:ca-central-1:730335337132:cluster/visionAI-kafka/1c2bf101-d66c-47dc-a9e1-a1da37501b13-s1
-              - arn:aws:kafka:ca-central-1:730335337132:topic/visionAI-kafka/1c2bf101-d66c-47dc-a9e1-a1da37501b13-s1/chunked_vids
-              - arn:aws:kafka:ca-central-1:730335337132:topic/visionAI-kafka/1c2bf101-d66c-47dc-a9e1-a1da37501b13-s1/summarised_vids
-              - arn:aws:kafka:ca-central-1:730335337132:group/visionAI-kafka/1c2bf101-d66c-47dc-a9e1-a1da37501b13-s1/video_summarizers_dbg
+              - arn:aws:kafka:ca-central-1:730335337132:cluster/visionAI-kafka/e8e9d3d4-5c71-4ec2-8cbb-ab944a77013b-s1
+              - arn:aws:kafka:ca-central-1:730335337132:topic/visionAI-kafka/e8e9d3d4-5c71-4ec2-8cbb-ab944a77013b-s1/chunked_vids
+              - arn:aws:kafka:ca-central-1:730335337132:topic/visionAI-kafka/e8e9d3d4-5c71-4ec2-8cbb-ab944a77013b-s1/summarised_vids
+              - arn:aws:kafka:ca-central-1:730335337132:group/visionAI-kafka/e8e9d3d4-5c71-4ec2-8cbb-ab944a77013b-s1/video_summarizers_dbg
           - Sid: ExecActions
             Effect: Allow
             Action:

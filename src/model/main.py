@@ -30,16 +30,14 @@ print(f"S3: {s3}")
 runtime = boto3.client('sagemaker-runtime')
 
 kafka_consumer.consumer.poll(timeout_ms=0)
-ass = list(kafka_consumer.consumer.assignment())
-print("ASSIGNMENT:", ass)
 
-if not ass:
-    print("TOPICS ON CLUSTER:", kafka_consumer.consumer.topics())  # must contain TOPIC_IN
-    print("PARTITIONS FOR TOPIC:", kafka_consumer.consumer.partitions_for_topic(TOPIC_IN))
-    kafka_consumer.consumer.unsubscribe()
-    tps = [TopicPartition(TOPIC_IN, p) for p in kafka_consumer.consumer.partitions_for_topic(TOPIC_IN)]
-    kafka_consumer.consumer.assign(tps)
-    print("ASSIGNMENT after manual assign:", list(kafka_consumer.consumer.assignment()))
+# if not ass:
+#     print("TOPICS ON CLUSTER:", kafka_consumer.consumer.topics())  # must contain TOPIC_IN
+#     print("PARTITIONS FOR TOPIC:", kafka_consumer.consumer.partitions_for_topic(TOPIC_IN))
+#     kafka_consumer.consumer.unsubscribe()
+#     tps = [TopicPartition(TOPIC_IN, p) for p in kafka_consumer.consumer.partitions_for_topic(TOPIC_IN)]
+#     kafka_consumer.consumer.assign(tps)
+#     print("ASSIGNMENT after manual assign:", list(kafka_consumer.consumer.assignment()))
 
 def call_sagemaker(chunk_folder):
     payload = {"path_to_data": chunk_folder}
@@ -83,12 +81,14 @@ def commit_exact(msg):
         pass
 
 
+
 # while not kafka_consumer.consumer.assignment():
 #     kafka_consumer.consumer.poll(timeout_ms=200)
 
 # kafka_consumer.consumer.poll(timeout_ms=0)
 # tps = list(kafka_consumer.consumer.assignment())
 # ends = kafka_consumer.consumer.end_offsets(tps)
+# pos = kafka_consumer.consumer.position(tps[0])
 # print("Tps: ", tps, "ends: ", ends)
 
 # for tp in tps:
@@ -97,10 +97,12 @@ def commit_exact(msg):
 
 print("Entering consume loop…")
 while True:
-    polled = kafka_consumer.consumer.poll(timeout_ms=1500)
-    if not polled:
-        print("no messages yet…"); time.sleep(1); continue
-    print("Frame_summary service polled for messages: ", polled)
+    polled = kafka_consumer.consumer.poll(timeout_ms=10000)
+    # if not polled:
+    #     print("no messages yet…"); time.sleep(1); continue
+    # print("Frame_summary service polled for messages: ", polled)
+    ass = list(kafka_consumer.consumer.assignment())
+    print("ASSIGNMENT:", ass)
     for partition, msgs in polled.items():
         print("Partition: ", partition, "Msgs: ", msgs)
         for msg in msgs:

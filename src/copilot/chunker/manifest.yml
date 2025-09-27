@@ -36,7 +36,7 @@ variables:
   S3_INPUT_DIR: raw-videos-02
   S3_OUTPUT_DIR: processed-videos-visionai
   GROUP_ID: video_processors
-  BOOTSTRAP_SERVERS: boot-gb3dusew.c1.kafka-serverless.ca-central-1.amazonaws.com:9098
+  BOOTSTRAP_SERVERS: boot-38rpf9kk.c1.kafka-serverless.ca-central-1.amazonaws.com:9098
   TOPIC_OUT: chunked_vids
 
 # taskrole:

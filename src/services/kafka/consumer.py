@@ -1,6 +1,7 @@
 from kafka import KafkaConsumer
 from kafka.sasl.oauth import AbstractTokenProvider
 from aws_msk_iam_sasl_signer import MSKAuthTokenProvider
+from kafka.admin import KafkaAdminClient, NewPartitions
 
 class MSKTokenProvider(AbstractTokenProvider):
     def token(self):
@@ -18,9 +19,24 @@ class Consumer():
                                       max_poll_interval_ms=1000000,
                                       group_id=group_id,
                                       enable_auto_commit=False,
-                                      auto_offset_reset='latest',
+                                      auto_offset_reset='earliest',
                                       max_poll_records=1)
         
+        admin_client = KafkaAdminClient(bootstrap_servers=[bootstrap_servers],
+                                        security_protocol='SASL_SSL',
+                                        sasl_mechanism='OAUTHBEARER',
+                                        sasl_oauth_token_provider=token_provider)
+        
+        new_partition_count = 4
+        new_partitions_request = {topic: NewPartitions(new_partition_count)}
+        try:
+            response = admin_client.create_partitions(new_partitions_request)
+            print(f"Partition increase request sent: {response}")
+        except Exception as e:
+            print(f"Error increasing partitions: {e}")
+        finally:
+            admin_client.close()
+
     def consume(self):
         print("Starting to consume...")
         print(self.consumer)

@@ -26,7 +26,7 @@ variables:
   S3_INPUT_DIR: processed-videos-visionai
   S3_OUTPUT_DIR: summarised-videos-visionai
   GROUP_ID: video_summarizers_dbg
-  BOOTSTRAP_SERVERS: boot-gb3dusew.c1.kafka-serverless.ca-central-1.amazonaws.com:9098
+  BOOTSTRAP_SERVERS: boot-38rpf9kk.c1.kafka-serverless.ca-central-1.amazonaws.com:9098
   TOPIC_OUT: summarised_vids
   ENDPOINT_NAME: huggingface-pytorch-tgi-inference-2025-09-19-01-51-18-150
   BUCKET: processed-videos-visionai
